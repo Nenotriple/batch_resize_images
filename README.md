@@ -1,4 +1,5 @@
 <h1 align="center">Batch Resize Images</h1>
+
 <p align="center">This tool allows you to resize all images in the selected directory using various operations and conditions.</p>
 
 <p align="center">
@@ -41,6 +42,7 @@ Select a directory containing images, adjust the settings and conditions as desi
 - **Quality:**
   - Used to control the output quality of `JPG` and `WEBP` images. A higher value results in a higher quality output. (Ignored for `PNG`)
 
+
 # 🚩 Requirements
 
 > [!TIP]
@@ -59,7 +61,7 @@ You will need `Pillow`, `PyPNG`, and `NumPy`.
 
 [v1.04 changes:](https://github.com/Nenotriple/batch_resize_images/releases/tag/v1.04)
 
-  - Proper full release, previously released as a helper script to [img-txt_viewer](https://github.com/Nenotriple/img-txt_viewer)
+This is the first proper full release. Previously released as a helper script to [img-txt_viewer](https://github.com/Nenotriple/img-txt_viewer), but it grew into its own app.
 
 <br>
 
