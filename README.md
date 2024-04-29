@@ -34,7 +34,7 @@ Select a directory containing images, adjust the settings and conditions as desi
 - **Checkbuttons:**
   - Use Output Folder: When enabled, a new folder will be created in the image directory called 'Resize Output' where images will be saved.
   - Overwrite Files: When disabled, conflicting files will have a `_#` appended to the filename. If enabled, files with the same basename will be overwritten.
-  - Save PNG Info: When enabled, this option will automatically save any PNG chunk info to a separate text file with the same filename in the output path.
+  - Save PNG Info: When enabled, this option will automatically save any PNG chunk info to the resized output if saving as PNG. If converting from PNG to another type, then a text file will be created containing the PNG info.
 
 - **Filetype:**
   - Select 'AUTO' to output with the same filetype as the input image. Alternatively, choose a specific filetype to force all images to be saved with the chosen type.
@@ -58,18 +58,21 @@ You will need `Pillow` and `PyPNG`
 
 # 📜 Version History
 
-[v1.04 changes:](https://github.com/Nenotriple/batch_resize_images/releases/tag/v1.04)
-
-This is the first proper full release. Previously released as a helper script to [img-txt_viewer](https://github.com/Nenotriple/img-txt_viewer), but it grew into its own app.
-
-<br>
+[v1.05 changes:](https://github.com/Nenotriple/batch_resize_images/releases/tag/v1.05)
 
   - New:
-    - New option: "Save PNG Info`. Checking this option will automatically save any PNG chunk info to a separate text file in the output path.
-      - As the name implies, only `PNG` images are supported.
-    - New option: `Quality Slider`. This allows you to set the output quality of JPG and WEBP images.
+      - `Save PNG Info`:
+        - `PNG chunk info` is now copied to the resized output if the output is also PNG. Only copies PNG textual data like: `tEXt`, `zTXt`, `iTXt`.
+        - If converting from PNG to another type, then a text file will be created containing the PNG info.
 
 <br>
 
   - Fixed:
-    - Fixed issue where the "Resize!" button would stay disabled.
+    - Fixed error where the `Resize!` button would become disabled after clicking it without a directory selected.
+    - Fixed issues where selecting `Resize!` without a valid width/height wouldn't return early.
+    - Fixed some typos.
+
+<br>
+
+  - Other changes:
+    - Dropped `PyPNG` and instead now use `PngInfo` from Pillow.
