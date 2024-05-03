@@ -50,10 +50,9 @@ Select a directory containing images, adjust the settings and conditions as desi
 
 **Python 3.10+**
 
-You will need `Pillow` and `PyPNG`
+You will need `Pillow`
 
  - To install Pillow: `pip install pillow`
- - To install PyPNG: `pip install pypng` 
 
 
 # 📜 Version History
