@@ -34,7 +34,9 @@ Select a directory containing images, adjust the settings and conditions as desi
 - **Checkbuttons:**
   - Use Output Folder: When enabled, a new folder will be created in the image directory called 'Resize Output' where images will be saved.
   - Overwrite Files: When disabled, conflicting files will have a `_#` appended to the filename. If enabled, files with the same basename will be overwritten.
-  - Save PNG Info: When enabled, this option will automatically save any PNG chunk info to the resized output if saving as PNG. If converting from PNG to another type, then a text file will be created containing the PNG info.
+  - Save PNG Info: When enabled, this option will automatically save any PNG/WEBP chunk info to the resized output if saving as PNG or WEBP. If converting from PNG/WEBP to another type, then a text file will be created containing the metadata.
+    - Handling WEBP metadata requires `ExifTool.exe` to be in the same folder as this application.
+    - ExifTool (2003-2024) was created by Phil Harvey and can be downloaded from https://exiftool.org/
 
 - **Filetype:**
   - Select 'AUTO' to output with the same filetype as the input image. Alternatively, choose a specific filetype to force all images to be saved with the chosen type.
@@ -57,21 +59,15 @@ You will need `Pillow`
 
 # 📜 Version History
 
-[v1.05 changes:](https://github.com/Nenotriple/batch_resize_images/releases/tag/v1.05)
+[v1.06 changes:](https://github.com/Nenotriple/batch_resize_images/releases/tag/v1.06)
 
   - New:
-      - `Save PNG Info`:
-        - `PNG chunk info` is now copied to the resized output if the output is also PNG. Only copies PNG textual data like: `tEXt`, `zTXt`, `iTXt`.
-        - If converting from PNG to another type, then a text file will be created containing the PNG info.
-
-<br>
-
-  - Fixed:
-    - Fixed error where the `Resize!` button would become disabled after clicking it without a directory selected.
-    - Fixed issues where selecting `Resize!` without a valid width/height wouldn't return early.
-    - Fixed some typos.
+      - Metadata can now be copied between PNG and WEBP images.
+        - Copying metadata from PNG-to-WEBP and WEBP-to-PNG requires `ExifTool.exe` to be in the same folder as `batch_resize_images.exe`.
+        - ExifTool (2003-2024) is created by Phil Harvey and can be downloaded from https://exiftool.org/
 
 <br>
 
   - Other changes:
-    - Dropped `PyPNG` and instead now use `PngInfo` from Pillow.
+    - Clicking on the directory entry when it's displaying the default `...` will now clear the entry.
+    - Minor UI tweaks.
