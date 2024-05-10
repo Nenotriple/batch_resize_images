@@ -4,7 +4,7 @@
 #                                      #
 #          Batch Resize Images         #
 #                                      #
-#   Version : v1.05                    #
+#   Version : v1.06                    #
 #   Author  : github.com/Nenotriple    #
 #                                      #
 ########################################
@@ -31,6 +31,8 @@ from tkinter import ttk, Toplevel, filedialog, messagebox, TclError
 from tkinter.scrolledtext import ScrolledText
 from PIL.PngImagePlugin import PngInfo
 from PIL import Image
+
+import subprocess
 
 
 myappid = 'ResizeImages.Nenotriple'
@@ -65,7 +67,7 @@ class AboutWindow(Toplevel):
 
         "Use Output Folder:":       "When enabled, a new folder will be created in the image directory called 'Resize Output' where images will be saved.",
         "Overwrite Files:":         "When disabled, conflicting files will have '_#' append to the filename. If enabled, files with the same basename will be overwritten.",
-        "Save PNG Info:":           "When enabled, this option will automatically save any PNG chunk info to the resized output if saving as PNG. If converting from PNG-to-* then a text file will be created containing the PNG info."
+        "Save PNG Info:":           "When enabled, this option will automatically save any PNG chunk info to the resized output if saving as PNG. If converting from PNG to another type, then a text file will be created containing the PNG info."
     }
 
 
@@ -250,9 +252,9 @@ class ResizeImages(tk.Frame):
         self.quality_label.pack(side="left", padx=2, pady=2)
         self.quality_var = tk.IntVar(value=100)
         self.original_quality = self.quality_var.get()
-        self.quality_scale = tk.Scale(self.frame_quality, length=1, showvalue=False, variable=self.quality_var, orient="horizontal", from_=10, to=100)
+        self.quality_scale = tk.Scale(self.frame_quality, length=1, showvalue=False, variable=self.quality_var, orient="horizontal", from_=20, to=100)
         self.quality_scale.pack(side="left", fill="x", expand=True)
-        self.quality_value_label = tk.Label(self.frame_quality, textvariable=self.quality_var)
+        self.quality_value_label = tk.Label(self.frame_quality, textvariable=self.quality_var, width=3)
         self.quality_value_label.pack(side="left", padx=2, pady=2)
 
 
@@ -502,6 +504,8 @@ class ResizeImages(tk.Frame):
 
 
     def should_resize(self, original_size, new_size):
+        if original_size == new_size:
+            return False
         resize_condition = self.resize_condition_var.get()
         if resize_condition == "Upscale Only":
             return new_size > original_size
@@ -539,7 +543,7 @@ class ResizeImages(tk.Frame):
         elif resize_mode == "Longer Side":
             new_size = (height, height)
             if self.should_resize(original_size, new_size):
-                img = self.resize_to_longer_side(img, width)
+                img = self.resize_to_longer_side(img, height)
         return img
 
 
@@ -635,11 +639,14 @@ class ResizeImages(tk.Frame):
 
 
     def handle_metadata(self, filename, src_image_path, output_image_path):
-                if self.save_png_info_var.get():
-                    if filename.lower().endswith(".png"):
-                        self.copy_png_metadata(src_image_path, output_image_path)
-                    #if filename.lower().endswith(".webp"):
-                    #    self.copy_webp_metadata(src_image_path, output_image_path)
+        if self.save_png_info_var.get():
+            if filename.lower().endswith(".png"):
+                if output_image_path.lower().endswith(".webp"):
+                    self.copy_png_to_webp(src_image_path, output_image_path)
+                else:
+                    self.copy_png_metadata(src_image_path, output_image_path)
+            if filename.lower().endswith(".webp"):
+                self.copy_webp_metadata(src_image_path, output_image_path)
 
 
     # PNG
@@ -674,25 +681,50 @@ class ResizeImages(tk.Frame):
         self.write_png_metadata(pnginfo, metadata_text, dest_image_path)
 
 
-#    # WEBP
-#    def read_webp_metadata(self, src_image_path):
-#        exiftool_path = "exiftool.exe"
-#        process = subprocess.run([exiftool_path, '-UserComment', '-b', src_image_path], capture_output=True, text=True)
-#        user_comment = process.stdout.strip()
-#        return user_comment
-#
-#
-#    def write_webp_metadata(self, user_comment, dest_image_path):
-#        exiftool_path = "exiftool.exe"
-#        base_filename = os.path.basename(dest_image_path)
-#        subprocess.run([exiftool_path, '-overwrite_original', f'-UserComment={user_comment}', dest_image_path], check=True)
-#        with open(f"{base_filename}.txt", "w", encoding="utf-8") as f:
-#            f.write(user_comment)
-#
-#
-#    def copy_webp_metadata(self, src_image_path, dest_image_path):
-#        user_comment = self.read_webp_metadata(src_image_path)
-#        self.write_webp_metadata(user_comment, dest_image_path)
+    def copy_png_to_webp(self, src_image_path, dest_image_path):
+        exiftool_path = "exiftool.exe"
+        if os.path.exists(exiftool_path):
+            src_image = Image.open(src_image_path)
+            metadata = src_image.info
+            metadata_str = ', '.join(f'{key}: {value}' for key, value in metadata.items())
+            subprocess.run([exiftool_path, '-overwrite_original', f'-UserComment={metadata_str}', dest_image_path], check=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        else:
+            self.stop = True
+            messagebox.showerror("Error!",
+                                    "Could not copy metadata from PNG-to-WEBP."
+                                    "\n\nexiftool.exe does not exist in the root path. (Check spelling)"
+                                    "\n\nDownload the Windows executable from exiftool.org and place in the same folder as batch_resize_images.exe, restart the program and try again."
+                                    "\n\nThe resize operation will now stop.")
+
+
+    # WEBP
+    def read_webp_metadata(self, src_image_path):
+        process = subprocess.run(["exiftool.exe", '-UserComment', '-b', src_image_path], capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        user_comment = process.stdout.strip()
+        print(user_comment)
+        return user_comment
+
+
+    def write_webp_metadata(self, user_comment, dest_image_path):
+        base_filename = os.path.basename(dest_image_path)
+        subprocess.run(["exiftool.exe", '-overwrite_original', f'-UserComment={user_comment}', dest_image_path], check=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        if not base_filename.endswith('.webp'):
+            with open(f"{base_filename}.txt", "w", encoding="utf-8") as f:
+                f.write(user_comment)
+
+
+    def copy_webp_metadata(self, src_image_path, dest_image_path):
+        if os.path.exists("exiftool.exe"):
+            user_comment = self.read_webp_metadata(src_image_path)
+            self.write_webp_metadata(user_comment, dest_image_path)
+        else:
+            self.stop = True
+            messagebox.showerror("Error!",
+                                    "Could not copy metadata from WEBP-to-WEBP."
+                                    "\n\nexiftool.exe does not exist in the root path. (Check spelling)"
+                                    "\n\nDownload the Windows executable from exiftool.org and place in the same folder as batch_resize_images.exe, restart the program and try again."
+                                    "\n\nThe resize operation will now stop.")
+
 
 
 #endregion
@@ -739,7 +771,7 @@ def check_path():
 
 def setup_root():
     root = tk.Tk()
-    root.title("v1.05 - Batch Resize Images --- github.com/Nenotriple")
+    root.title("v1.06 - Batch Resize Images --- github.com/Nenotriple")
     root.geometry("480x250")
     root.resizable(False, False)
     root.update_idletasks()
@@ -780,24 +812,22 @@ if __name__ == "__main__":
 
 '''
 
-v1.05 changes:
+[v1.06 changes:](https://github.com/Nenotriple/batch_resize_images/releases/tag/v1.06)
 
   - New:
-      - "Save PNG Info":
-        - PNG chunk info is now copied to the resized output if the output is also PNG. Only copies PNG textual data like: `tEXt`, `zTXt`, `iTXt`.
-        - If converting from PNG-to-* then a text file will be saved with the PNG info.
+      - Metadata can now be copied between PNG and WEBP images.
+        - Copying metadata from PNG-to-WEBP and WEBP-to-PNG requires `ExifTool.exe` to be in the same folder as `batch_resize_images.exe`.
+        - ExifTool (2003-2024) is created by Phil Harvey and can be downloaded from https://exiftool.org/
 
 <br>
 
   - Fixed:
-    - Fixed error where the `Resize!` button would become disabled after clicking it without a directory selected.
-    - Fixed issues where selecting `Resize!` without a valid width/height wouldn't return early.
-    - Fixed some typos.
+    -
 
 <br>
 
   - Other changes:
-    - Dropped `PyPNG` and instead now use `PngInfo` from Pillow.
+    - Minor UI tweaks.
 
 
 '''
