@@ -147,6 +147,7 @@ class ResizeImages(tk.Frame):
         self.entry_directory.insert(0, os.path.normpath(self.folder_path) if self.folder_path else "...")
         self.entry_directory.pack(side="left", fill="x", expand=True, padx=2, pady=2)
         self.entry_directory.bind("<Return>", lambda event: self.select_folder(self.entry_directory.get()))
+        self.entry_directory.bind("<Button-1>", lambda event: self.entry_directory.delete(0, "end") if self.entry_directory.get() == "..." else None)
 
         self.select_button = tk.Button(self.frame_top_row, width=8, overrelief="groove", text="Browse...", command=self.select_folder)
         self.select_button.pack(side="left", padx=2, pady=2)
@@ -827,6 +828,7 @@ if __name__ == "__main__":
 <br>
 
   - Other changes:
+    - Clicking on the directory entry when it's displaying the default `...` will now clear the entry.
     - Minor UI tweaks.
 
 
